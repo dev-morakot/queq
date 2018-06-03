@@ -1,0 +1,36 @@
+<div class="input-group form-group-sm">
+    <ui-select ng-model="ctrl.bicModel"
+               ng-required="ctrl.required"
+               theme="bootstrap"
+               ng-class="{'bic-required-field':ctrl.required==='true'}"
+               reset-search-input="true"
+               title="เลือกสินค้า"
+               on-select="ctrl.select($select.selected)"
+               >
+        <ui-select-match placeholder="ค้นหาหรือเลือกสินค้า...">
+            [{{$select.selected.default_code}}] {{$select.selected.name}}
+        </ui-select-match>
+        <ui-select-choices 
+            style="min-width:300px;"
+            repeat="product in ctrl.products track by $index"
+            refresh="ctrl.refreshProducts($select.search)"
+            refresh-delay="0"
+            refresh-on-active="true">
+            <div ng-bind-html="product.name | highlight: $select.search"></div>
+            <small ng-bind-html="product.default_code | highlight: $select.search">
+            </small>
+        </ui-select-choices>
+    </ui-select>
+    <span class="input-group-btn">
+        <button type="button" 
+                ng-click="ctrl.delete()" 
+                class="btn btn-default btn-sm">
+            <span class="glyphicon glyphicon-remove-circle"></span>
+        </button>
+        <button type="button" 
+                ng-click="ctrl.openProductInfo()"
+                class="btn btn-default btn-sm">
+                <span class="glyphicon glyphicon-eye-open"></span>
+        </button>
+    </span>
+</div>

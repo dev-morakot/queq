@@ -1,0 +1,257 @@
+<div class="input-group form-group-sm" style="width:100%">
+    <ui-select ng-model="$ctrl.bicModel"
+               ng-attr-name="$ctrl.name"
+               ng-required="$ctrl.required"
+               ng-class="{'bic-required-field':$ctrl.required==='true'}"
+               style="min-width: 150px"
+               theme="bootstrap"
+               reset-search-input="true"
+               title="Choose Lot"
+               on-select="$ctrl.select($select.selected)"
+               uis-open-close='$ctrl.onLotOpenClose(isOpen,$ctrl.dependProductId)'>
+        <ui-select-match 
+            placeholder="ล็อตสินค้า"
+            allow-clear='true'
+            >{{$select.selected.name}}</ui-select-match>
+        <ui-select-choices 
+            repeat="lot in $ctrl.lots track by $index"
+            refresh="$ctrl.refreshLots($ctrl.dependProductId,$select.search)"
+            refresh-delay="0"
+            refresh-on-active="true">
+            <small ng-bind-html="lot.name"></small>
+        </ui-select-choices>
+    </ui-select>
+    <span class="input-group-btn">
+        <button type="button"
+                ng-show="$ctrl.showTable==='true'"
+                ng-click="$ctrl.openModal()"
+                class="btn btn-default btn-sm">
+            <span class="glyphicon glyphicon glyphicon-th-list"></span>
+        </button>
+        <button type="button" 
+                ng-show="$ctrl.showView==='true'"
+                ng-click="$ctrl.viewLot($ctrl.bicModel.id)"
+                class="btn btn-default btn-sm">
+            <span class="glyphicon glyphicon-eye-open"></span>
+        </button>
+        <button type="button" 
+                ng-show="$ctrl.showAdd==='true'"
+                ng-disabled="$ctrl.dependProductId==null"
+                class="btn btn-default btn-sm"
+                ng-click="$ctrl.createLot($ctrl.dependProductId)">
+            <span class="glyphicon glyphicon-plus"></span>
+        </button>
+    </span>
+</div>
+
+
+
+<!---- เลือก Lot แบบ Modal -->
+<script type="text/ng-template" id="xProductLotModalContent.html">
+    <div class="modal-header">
+        <div class="modal-title" id="modal-title">
+            <h4>เลือกสินค้า/วัตถุดิบ</h4>
+            <span class="label label-warning" ng-show="mctrl.filterProduct">
+            {{mctrl.filterProduct.name}}
+            <span class="glyphicon glyphicon-remove" ng-click="mctrl.onRemoveDependProduct()"></span>
+            </span>
+            
+            <span class="label label-info" ng-show="mctrl.locationModel">
+            จากตำแหน่ง:{{mctrl.locationModel.name}}
+                <span class="glyphicon glyphicon-remove" ng-click="mctrl.onRemoveLocation()"></span>
+                </span>
+            
+            
+        </div>
+        <div class="modal-body" id="modal-body">
+            <div class="row">
+                <div class="col-sm-5">
+                    
+                        <input type="text" 
+                           placeholder="ระบุ ชื่อสินค้าคลัง รหัสบัญชี หรือ เลข Lot/Control เพื่อค้นหา"
+                           ng-model="mctrl.modalSearch"
+                           ng-keyup="$event.keyCode == 13 && mctrl.loadData()"
+                           class="form-control input-sm"></input>
+                    
+                </div>
+                <div class="col-sm-3">
+                    <select class="form-control input-sm" ng-model="mctrl.selected_cat_id">
+                        <option value="{{null}}">ทั้งหมด</option>
+                        <option ng-repeat="option in mctrl.categories" value="{{option.id}}">{{option.name}}</option>
+                    </select>
+                </div>
+                <div class="col-sm-2">
+                    <label>
+                        <input type="checkbox" ng-model="mctrl.hideZeroQty" ng-true-value="'true'" ng-change="mctrl.loadData()">
+                        ซ่อน Qty 0
+                    </label>
+                    
+                </div>
+                <div class="col-sm-2">
+                    <button class="btn btn-info btn-sm"
+                                ng-click="mctrl.loadData()"
+                                >ค้นหาสินค้าคลัง</button>
+                </div>
+            </div>        
+            <div class="row">
+                <div class="col-sm-12 table-responsive">
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th>เลือก</th>
+                                <th>
+                                    <a href="javascript:void(0)" ng-click="mctrl.sortToggle('p.default_code')"><small>รหัสบัญชี</small></a>
+                                    </th>
+                                <th>
+                                    <a href="javascript:void(0)" ng-click="mctrl.sortToggle('p.name')"><small>ชื่อสินค้า</small></a>
+                                    </th>
+                                <th>
+                                    <a href="javascript:void(0)" ng-click="mctrl.sortToggle('loc.name')"><small>คลัง</small></a>
+                                </th>
+                                <th>
+                                    <a href="javascript:void(0)" ng-click="mctrl.sortToggle('lot.name')"><small>Lot/Control</small></a>
+                                </th>
+                                <th>
+                                    <a href="javascript:void(0)" ng-click="mctrl.sortToggle('lot.expired_date')"><small>Expired</small></a>
+                                </th>
+                                <th class="text-right">
+                                    <a href="javascript:void(0)" ng-click="mctrl.sortToggle('q.qty')"><small>Qty</small></a>
+                                </th>
+                                <th class="text-right">
+                                    <small title="Forecast Qty">Qty (FC)</small>
+                                </th>
+                                <th>
+                                    <small>หน่วย</small>
+                                </th>
+                                <th class="text-right">
+                                    <a href="javascript:void(0)" ng-click="mctrl.sortToggle('q.qty2')"><small>Qty2</small></a>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="p in mctrl.products" ng-click="mctrl.addSelect(p)">
+                                <td>
+                                    <span ng-show="p == mctrl.selectedItem" class="label label-info">selected</span>
+                                    <button 
+                                        ng-show="p != mctrl.selectedItem"
+                                        class="btn btn-default btn-sm">เลือก</button></td>
+                                <td>
+                                    <small>{{p.default_code}}</small>
+                                    
+                                </td>
+                                <td><small>{{p.name}}</small></td>
+                                <td><small>{{p.loc_name}}</small></td>
+                                <td><small>{{p.lot_name}}</small></td>
+                                <td><small>{{p.expired_date}}</small></td>
+                                <td class="text-right"><small>{{p.qty | number:3}}</small></td>
+                                    <td class="text-right"><small>{{p.qty_virt | number:3}}</small></td>
+                                <td><small>{{p.uom_name}}</small></td>
+                                <td class="text-right"><small>{{p.qty2 | number:3}}</small></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>           
+        </div>
+        <ul uib-pagination boundary-links="true" 
+            total-items="mctrl.totalItems" 
+            ng-change="mctrl.pageChanged()"
+            ng-model="mctrl.currentPage" 
+            items-per-page="mctrl.itemsPerPage"
+            max-size="5"
+            num-pages="numPages"
+            class="pagination-sm" 
+            previous-text="&lsaquo;" 
+            next-text="&rsaquo;" 
+            first-text="&laquo;" 
+            last-text="&raquo;">
+        </ul>
+        <pre>หน้า {{mctrl.currentPage}} / {{numPages}}</pre>
+        <div class="modal-footer">
+            <button class="btn btn-success btn-sm" type="button" ng-click="mctrl.done()">ตกลง</button>
+            <button class="btn btn-warning btn-sm" type="button" ng-click="mctrl.cancel()">ปิด</button>
+        </div>
+    </div>
+</script>
+
+<!----- สร้าง Lot แบบ Modal -->
+<script type="text/ng-template" id="lotFormModalContent.html">
+    <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">สร้าง Lot/Control No.</h3>
+        <h4 class="modal-title" id="modal-title">สินค้า:{{fctrl.product.default_code}} {{fctrl.product.name}}</h4>
+    <div class="modal-body" id="modal-body">
+        
+        <form class="form-vertical">
+            <div class="alert alert-warning" ng-show="fctrl.msgs">
+                    {{fctrl.msgs}}
+            </div>
+            <div class="form-group" style="margin-bottom:20px">
+                <label class="control-label">Lot/Ctrl เลขที่:</label>
+                <input type="text" 
+                                    required
+                                   class="form-control"
+                                   ng-model="fctrl.lot.name">
+                            </input>
+            </div>
+            <div class="form-group" style="margin-bottom:20px" ng-show="fctrl.formReceivedDate">
+                <label class="control-label">วันที่/เวลารับ<small class="help help-block">วันที่รับสินค้า Lot/Control นี้ ตามวันที่รับจากการซื้อ หรือวันที่รับจากการผลิต</small></label>
+                <div class="form-group">
+                      <div class="row">
+                        <div class="col-sm-8">
+                            <input type="text"
+                            class="input-sm form-control"
+                            uib-datepicker-popup="dd/MM/yyyy"
+                            ng-model="fctrl.lot.received_date"
+                            datepicker-options="datepickerOptions"
+                            is-open="fctrl.datepicker3.opened"
+                            close-text="Close"
+                            ng-click="fctrl.datepicker3.opened=true"
+                            />
+                        </div>
+                        <div class="col-sm-3">
+                            <div uib-timepicker ng-model="fctrl.lot.received_date" ng-change="changed()" hour-step="1" minute-step="1" 
+                            show-meridian="false" show-spinners="false"></div>
+                        </div>
+                      </div>
+                      
+
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom:20px">
+                    <label class="control-label">MFG Date </label>
+                    <input type="text"
+                            class="input-sm form-control"
+                            uib-datepicker-popup="dd/MM/yyyy"
+                            ng-model="fctrl.lot.mfg_date"
+                            datepicker-options="datepickerOptions"
+                            is-open="fctrl.datepicker1.opened"
+                            close-text="Close"
+                            ng-click="fctrl.datepicker1.opened=true"
+                            />
+            </div>
+            <div class="form-group form-group-sm" style="margin-bottom:20px">
+                    <label class="control-label">EXP Date </label>
+                    <input type="text"
+                        class="input-sm form-control"
+                        uib-datepicker-popup="dd/MM/yyyy"
+                        ng-model="fctrl.lot.expired_date"
+                        datepicker-options="datepickerOptions"
+                        is-open="fctrl.datepicker2.opened"
+                        close-text="Close"
+                        ng-click="fctrl.datepicker2.opened=true"
+                        />
+            </div>
+        </form>         
+    </div>
+    <div class="modal-footer">
+        <div class="row">
+            <div class="col-sm-12">
+                <button class="btn btn-success" type="button" ng-click="fctrl.save()">Save</button>
+                <button class="btn btn-warning" type="button" ng-click="fctrl.cancel()">Cancel</button>
+                </div>
+            
+            </div>
+        
+    </div>
+    </div>
+</script>
