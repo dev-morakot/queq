@@ -138,8 +138,8 @@ $config = [
         'resource'=>[
             'class' => 'app\modules\resource\Resource'
         ],
-        'account'=>[
-            'class' => 'app\modules\account\Account'
+        'people'=>[
+            'class' => 'app\modules\people\People'
         ],
         'admin'=>[
             'class'=>'app\modules\admin\AdminModule'

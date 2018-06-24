@@ -22,7 +22,7 @@ class m180603_080310_people extends Migration
     public function safeUp()
     {
         // res_people
-        $this->createTable('res_people', [
+        $this->createTable('res_person', [
             'id'=>$this->primaryKey(),
             'state'=>$this->string(70)->comment('สถานะการจองคิว'),
             'date_queue'=>$this->dateTime()->comment('วันที่จองคิว'),
@@ -65,7 +65,7 @@ class m180603_080310_people extends Migration
     public function safeDown()
     {
        
-        $this->dropTable('res_people');   
+        $this->dropTable('res_person');   
     }
 
     /*
